@@ -49,6 +49,7 @@ div.main textarea:focus {
 	padding: 10px;
 	font-family: "Courier New", Courier, monospace;
 	font-size: 12;
+	line-height: 1;
 }
 
 div.main div.content {
