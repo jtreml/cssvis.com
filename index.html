@@ -1,0 +1,120 @@
+<html>
+	<head>
+		<title>cssvis.com</title>
+
+		<link rel="stylesheet" type="text/css" href="reset.css" />
+		<link rel="stylesheet" type="text/css" href="main.css" />
+
+		<script src="jquery-1.7.1.min.js"></script>
+		<script src="rgbcolor.js"></script>
+	</head>
+
+	<script type="text/javascript">
+		var text = null;
+
+		jQuery(document).ready(function() {
+			jQuery('textarea').bind('paste', function(e) {
+				var el = jQuery(this);
+				setTimeout(function() {
+					decideEditOrVisualize(jQuery(el).val());
+				}, 100);
+			});
+
+			jQuery('textarea').bind('keypress', function(e) {
+				//if(e.target != this) {
+				//	return;
+				//}
+
+				if(e.keyCode == 10 && e.ctrlKey) {
+					decideEditOrVisualize(jQuery(this).val());
+				}
+
+			});
+
+			jQuery('textarea').bind('keydown', function(e) {
+				var el = jQuery(this);
+				setTimeout(function() {
+					checkInstructions(jQuery(el).val());
+				}, 100);
+			});
+
+			jQuery('div.main').dblclick(function() {
+				edit();
+			});
+
+			jQuery('textarea').focus();
+		});
+
+		function decideEditOrVisualize(input) {
+			text = input;
+			if(text && jQuery.trim(text) != '') {
+				visualize();
+			} else {
+				edit();
+			}
+		}
+
+		function visualize() {
+			jQuery('div.instructions').hide();
+			jQuery('textarea').hide();
+			jQuery('div.content').html(colorizeText(transformText(text)));
+			jQuery('div.content').show();
+		}
+
+		function edit() {
+			jQuery('div.content').hide();
+			jQuery('textarea').val(text);
+			jQuery('textarea').show();
+			jQuery('textarea').focus();
+			//jQuery('textarea').select();
+			checkInstructions(text);
+		}
+
+		function checkInstructions(input) {
+			if(!input || jQuery.trim(input) == '') {
+				jQuery('div.instructions').show();
+			} else {
+				jQuery('div.instructions').hide();
+			}
+		}
+
+		function transformText(input) {
+			var temp = jQuery('div.dummy').text(input).text();
+			temp = temp.replace(/(\r\n|\n|\r)/gm, '<br />');
+			temp = temp.replace(/(\t)/gm, '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+			temp = temp.replace(/[[:space:]]/gm, '&nbsp;');
+			return temp;
+		}
+
+		function colorizeText(input) {
+			var temp = input;
+			temp = temp.replace(/((#([ABCDEFabcdef0-9]{3}([ABCDEFabcdef0-9]{3})?))|(rgb\((\s*\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\))|(rgba\((\s*\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(((\d{1,3})((\.\d*){0,1}))|(\.\d+))\s*\))|(hsl\((\s*\d{1,3})\s*,\s*(\d{1,3}%)\s*,\s*(\d{1,3}%)\s*\))|(hsla\((\s*\d{1,3})\s*,\s*(\d{1,3}%)\s*,\s*(\d{1,3}%)\s*,\s*(((\d{1,3})((\.\d*){0,1}))|(\.\d+))\s*\)))/gm, insertColor);
+			return temp;
+		}
+
+		function insertColor(colorString) {
+			var color = new RGBColor(colorString);
+			var grayInv = parseInt(0.21 * color.r + 0.71 * color.g + 0.07 * color.b);
+			if(grayInv < 128) {
+				grayInv += 128;
+			} else {
+				grayInv -= 128;
+			}
+			return '<span class="highlight" style="background-color: ' + color.toHex() + '; color: rgb(' + grayInv + ', ' + grayInv + ', ' + grayInv + ');">' + colorString + '</span>';
+		}
+	</script>
+
+	<body>
+		<div class="container">
+			<div class="sidebar">
+				<h1>css<br />vis</h1>
+			</div>
+			<div class="main">
+				<div class="instructions">Paste CSS code or URL to style sheet here.</div>
+				<div class="content"></div>
+				<div class="dummy"></div>
+				<textarea></textarea>
+			</div>
+		</div>
+	</body>
+</html>
