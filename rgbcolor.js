@@ -1,7 +1,14 @@
 /**
  * A class to parse color values
+ * 
+ * [Jürgen Treml] Improved rgb syntax and added support for 
+ * rgba, hsl and hsla formats. 
+ *
  * @author Stoyan Stefanov <sstoo@gmail.com>
+ * @author Jürgen Treml <mail@juergentreml.de>
+ *
  * @link   http://www.phpied.com/rgb-color-parser-in-javascript/
+ *
  * @license Use it if you like it
  */
 function RGBColor(color_string)
@@ -173,13 +180,52 @@ function RGBColor(color_string)
     // array of color definition objects
     var color_defs = [
         {
-            re: /^rgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)$/,
+            re: /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/,
             example: ['rgb(123, 234, 45)', 'rgb(255,234,245)'],
             process: function (bits){
                 return [
                     parseInt(bits[1]),
                     parseInt(bits[2]),
-                    parseInt(bits[3])
+                    parseInt(bits[3]),
+                    1.0
+                ];
+            }
+        },
+        {
+            re: /^rgba\((\s*\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(((\d{1,3})((\.\d*){0,1}))|(\.\d+))\s*\)$/,
+            example: ['rgb(123, 234, 45, 0.5)', 'rgb(255,234,245,0.5)'],
+            process: function (bits){
+                return [
+                    parseInt(bits[1]),
+                    parseInt(bits[2]),
+                    parseInt(bits[3]),
+                    parseFloat(bits[4])
+                ];
+            }
+        },
+        {
+            re: /^hsl\((\s*\d{1,3})\s*,\s*(\d{1,3}%)\s*,\s*(\d{1,3}%)\s*\)$/,
+            example: ['hsl(123, 90%, 45%)', 'hsl(255,70%,83%)'],
+            process: function (bits){
+                var conv = hslToRgb(parseInt(bits[1]) / 255, parseInt(bits[2].replace('%', '')) / 100, parseInt(bits[3].replace('%', '')) / 100);
+                return [
+                    parseInt(conv[0]),
+                    parseInt(conv[1]),
+                    parseInt(conv[2]),
+                    1.0
+                ];
+            }
+        },
+        {
+            re: /^hsla\((\s*\d{1,3})\s*,\s*(\d{1,3}%)\s*,\s*(\d{1,3}%)\s*,\s*(((\d{1,3})((\.\d*){0,1}))|(\.\d+))\s*\)$/,
+            example: ['hsla(123, 90%, 45%,0.5)', 'hsla(255,70%,83%,0.5)'],
+            process: function (bits){
+                var conv = hslToRgb(parseInt(bits[1]) / 255, parseInt(bits[2].replace('%', '')) / 100, parseInt(bits[3].replace('%', '')) / 100);
+                return [
+                    parseInt(conv[0]),
+                    parseInt(conv[1]),
+                    parseInt(conv[2]),
+                    parseFloat(bits[4])
                 ];
             }
         },
@@ -190,7 +236,8 @@ function RGBColor(color_string)
                 return [
                     parseInt(bits[1], 16),
                     parseInt(bits[2], 16),
-                    parseInt(bits[3], 16)
+                    parseInt(bits[3], 16),
+                    1.0
                 ];
             }
         },
@@ -201,7 +248,8 @@ function RGBColor(color_string)
                 return [
                     parseInt(bits[1] + bits[1], 16),
                     parseInt(bits[2] + bits[2], 16),
-                    parseInt(bits[3] + bits[3], 16)
+                    parseInt(bits[3] + bits[3], 16),
+                    1.0
                 ];
             }
         }
@@ -217,6 +265,7 @@ function RGBColor(color_string)
             this.r = channels[0];
             this.g = channels[1];
             this.b = channels[2];
+            this.a = channels[3];
             this.ok = true;
         }
 
@@ -226,11 +275,17 @@ function RGBColor(color_string)
     this.r = (this.r < 0 || isNaN(this.r)) ? 0 : ((this.r > 255) ? 255 : this.r);
     this.g = (this.g < 0 || isNaN(this.g)) ? 0 : ((this.g > 255) ? 255 : this.g);
     this.b = (this.b < 0 || isNaN(this.b)) ? 0 : ((this.b > 255) ? 255 : this.b);
+    this.a = (this.a < 0 || isNaN(this.a)) ? 0 : ((this.a > 1.0) ? 1.0 : this.a);
 
     // some getters
     this.toRGB = function () {
         return 'rgb(' + this.r + ', ' + this.g + ', ' + this.b + ')';
     }
+
+    this.toRGBA = function () {
+        return 'rgba(' + this.r + ', ' + this.g + ', ' + this.b + ', ' + this.a + ')';
+    }
+
     this.toHex = function () {
         var r = this.r.toString(16);
         var g = this.g.toString(16);
@@ -284,5 +339,31 @@ function RGBColor(color_string)
 
     }
 
-}
+    /* 
+     * @link   http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
+     */
+    function hslToRgb(h, s, l) {
+        var r, g, b;
 
+        if(s == 0){
+            r = g = b = l; // achromatic
+        }else{
+            function hue2rgb(p, q, t){
+                if(t < 0) t += 1;
+                if(t > 1) t -= 1;
+                if(t < 1/6) return p + (q - p) * 6 * t;
+                if(t < 1/2) return q;
+                if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                return p;
+            }
+
+            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            var p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+
+        return [r * 255, g * 255, b * 255];
+    }
+}
