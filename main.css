@@ -29,6 +29,27 @@ div.sidebar h1 {
 	line-height: 0.85;
 }
 
+div.sidebar hr.ad {
+	border: 0px solid black;
+	background-color: #2E2E2E;
+	-moz-box-shadow: 0px 1px 0px #3E3E3E;
+	-webkit-box-shadow: 0px 1px 0px #3E3E3E;
+	box-shadow: 0px 1px 0px #3E3E3E;
+	height: 1px;
+	width: 90%;
+	position: absolute;
+	bottom: 300px;
+}
+
+div.sidebar div.ad {
+	position: absolute;
+	bottom: 30px;
+	left: 36px;
+	width: 120px;
+	height: 240px;
+	overflow: visible;
+}
+
 div.main {
 	position: relative;
 	height: 100%;
