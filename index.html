@@ -77,6 +77,7 @@
 			jQuery('textarea').hide();
 			jQuery('div.content').html(colorizeText(transformText(text)));
 			jQuery('div.content').show();
+			smoke.signal('Double-click to edit!', 1500);
 		}
 
 		function edit() {
@@ -155,7 +156,7 @@
 				</div>
 			</div>
 			<div class="main">
-				<div class="instructions">Paste CSS code or URL to style sheet here.</div>
+				<div class="instructions">Paste CSS code here.</div>
 				<div class="content"></div>
 				<div class="dummy"></div>
 				<textarea></textarea>
